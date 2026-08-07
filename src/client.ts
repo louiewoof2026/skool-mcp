@@ -134,6 +134,14 @@ export async function rawRequest(
   const config = await loadConfig();
   const { method = "GET", headers: extraHeaders = {}, body } = options;
 
+  // The session cookie must never leave Skool's own hosts. rawRequest is the only
+  // function that accepts a caller supplied URL, so a crafted url argument is the
+  // one path that could send the cookie somewhere else.
+  const host = new URL(url).hostname;
+  if (host !== "skool.com" && !host.endsWith(".skool.com")) {
+    throw new Error(`Refusing to send authenticated request to non-Skool host: ${host}`);
+  }
+
   const res = await fetch(url, {
     method,
     headers: {
