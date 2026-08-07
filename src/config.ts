@@ -17,7 +17,10 @@ export async function loadConfig(): Promise<SkoolConfig> {
 
   try {
     const raw = await readFile(CONFIG_PATH, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<SkoolConfig>;
+    // PowerShell's Out-File writes UTF-8 with a BOM by default, and JSON.parse
+    // rejects it, so config files created on Windows fail with a confusing
+    // syntax error. Strip the BOM before parsing.
+    const parsed = JSON.parse(raw.replace(/^\uFEFF/, "")) as Partial<SkoolConfig>;
 
     cached = {
       cookies: parsed.cookies ?? "",
