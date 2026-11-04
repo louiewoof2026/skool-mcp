@@ -7,7 +7,7 @@ export const membersListTool = {
   description:
     "List community members with pagination. Returns member info including name, bio, role, and online status.",
   inputSchema: {
-    community: z.string().optional().describe("Community slug. Uses default from config if omitted."),
+    community: z.string().optional().describe("Community slug. Leave this empty (omit the parameter entirely) to use the default community configured on the server."),
     page: z.number().default(1).describe("Page number (1-based)"),
   },
   async handler(args: { community?: string; page: number }) {
@@ -32,7 +32,7 @@ export const membersPendingTool = {
   description:
     "List pending membership requests. Requires auth cookies with admin/moderator access.",
   inputSchema: {
-    community: z.string().optional().describe("Community slug. Uses default from config if omitted."),
+    community: z.string().optional().describe("Community slug. Leave this empty (omit the parameter entirely) to use the default community configured on the server."),
   },
   async handler(args: { community?: string }) {
     const config = await loadConfig();

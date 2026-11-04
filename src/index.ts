@@ -150,23 +150,29 @@ async function main() {
     const mcpPostHandler = async (req: any, res: any) => {
       const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
+      console.log(`[POST] Request received. Session: ${sessionId || "none"}`);
+      console.log(`[POST] Headers:`, req.headers);
+      console.log(`[POST] Body:`, JSON.stringify(req.body, null, 2));
+
       try {
         let transport: typeof StreamableHTTPServerTransport.prototype;
 
         if (sessionId && transports.has(sessionId)) {
-          // Existing session
+          console.log(`[POST] Found existing transport for session: ${sessionId}`);
           transport = transports.get(sessionId)!;
         } else if (!sessionId && isInitializeRequest(req.body)) {
-          // New initialization
+          console.log(`[POST] Processing new initialization request...`);
           transport = new StreamableHTTPServerTransport({
             sessionIdGenerator: () => randomUUID(),
             onsessioninitialized: (newSessionId: string) => {
+              console.log(`[POST] New session initialized: ${newSessionId}`);
               transports.set(newSessionId, transport);
             },
           });
 
           transport.onclose = () => {
             const sid = transport.sessionId;
+            console.log(`[TRANSPORT CLOSED] Session: ${sid}`);
             if (sid && transports.has(sid)) {
               transports.delete(sid);
             }
@@ -174,11 +180,12 @@ async function main() {
 
           const server = setupServer();
           await server.connect(transport);
-
+          
+          console.log(`[POST] Transport connected. Handling request...`);
           await transport.handleRequest(req, res, req.body);
           return;
         } else {
-          // Bad request
+          console.error(`[POST ERROR] Bad Request. Session ID: ${sessionId}, isInit: ${isInitializeRequest(req.body)}`);
           res.status(400).json({
             jsonrpc: "2.0",
             error: { code: -32000, message: "Bad Request: Invalid session" },
@@ -187,10 +194,10 @@ async function main() {
           return;
         }
 
-        // Handle existing session
+        console.log(`[POST] Handling message on existing transport...`);
         await transport.handleRequest(req, res, req.body);
       } catch (error) {
-        console.error("Error handling MCP request:", error);
+        console.error("[POST EXCEPTION] Error handling MCP request:", error);
         if (!res.headersSent) {
           res.status(500).json({
             jsonrpc: "2.0",
@@ -206,15 +213,18 @@ async function main() {
 
     // Main MCP endpoint handler for GET (SSE stream)
     const mcpGetHandler = async (req: any, res: any) => {
-      // In some clients, the session ID might be passed as a query param or they might expect SSEServerTransport behavior.
-      // We will extract from header first, then query param for fallback
       const sessionId = (req.headers["mcp-session-id"] as string) || (req.query.sessionId as string);
       
+      console.log(`[GET] Request received. Session: ${sessionId || "none"}`);
+      console.log(`[GET] Headers:`, req.headers);
+
       if (!sessionId || !transports.has(sessionId)) {
+        console.error(`[GET ERROR] Invalid or missing session ID: ${sessionId}`);
         res.status(400).send("Invalid or missing session ID");
         return;
       }
 
+      console.log(`[GET] Establishing SSE stream for session: ${sessionId}`);
       const transport = transports.get(sessionId)!;
       await transport.handleRequest(req, res);
     };

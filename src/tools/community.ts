@@ -7,7 +7,7 @@ export const communityInfoTool = {
   description:
     "Get community details including name, description, member count, and settings. Uses Next.js data route for read access.",
   inputSchema: {
-    community: z.string().optional().describe("Community slug (e.g. 'ai-agent-academy-6994'). Uses default from config if omitted."),
+    community: z.string().optional().describe("Community slug. Leave this empty (omit the parameter entirely) to use the default community configured on the server. DO NOT provide a fallback example if the user does not specify one."),
   },
   async handler(args: { community?: string }) {
     const config = await loadConfig();

@@ -7,7 +7,7 @@ export const postsListTool = {
   description:
     "List posts in a community feed. Supports category filtering and pagination. Returns post title, content preview, author, likes, and comment count.",
   inputSchema: {
-    community: z.string().optional().describe("Community slug. Uses default from config if omitted."),
+    community: z.string().optional().describe("Community slug. Leave this empty (omit the parameter entirely) to use the default community configured on the server."),
     category: z.string().optional().describe("Category/label UUID to filter by"),
     page: z.number().default(1).describe("Page number (1-based)"),
     sort: z.enum(["newest-cm", "newest", "top"]).default("newest-cm").describe("Sort order: newest-cm (recent activity), newest (created), top (most liked)"),
@@ -42,7 +42,7 @@ export const postsGetTool = {
   description:
     "Get a single post with its full content and comments. Provide the post slug (name field from posts list).",
   inputSchema: {
-    community: z.string().optional().describe("Community slug. Uses default from config if omitted."),
+    community: z.string().optional().describe("Community slug. Leave this empty (omit the parameter entirely) to use the default community configured on the server."),
     postSlug: z.string().describe("The post slug/name (from the 'name' field in posts list)"),
   },
   async handler(args: { community?: string; postSlug: string }) {

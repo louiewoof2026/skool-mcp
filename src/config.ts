@@ -26,7 +26,13 @@ export async function loadConfig(): Promise<SkoolConfig> {
     }
   }
 
-  const cookies = process.env.SKOOL_COOKIES ?? parsed.cookies ?? "";
+  let cookies = process.env.SKOOL_COOKIES ?? parsed.cookies ?? "";
+  
+  // Defensive normalization if Vault injected with colon/quotes instead of equals
+  if (cookies.startsWith('auth_token:"') && cookies.endsWith('"')) {
+    cookies = cookies.replace('auth_token:"', 'auth_token=').slice(0, -1);
+  }
+
   const defaultCommunity = process.env.SKOOL_DEFAULT_COMMUNITY ?? parsed.defaultCommunity ?? "";
   const baseUrl = process.env.SKOOL_BASE_URL ?? parsed.baseUrl ?? "https://www.skool.com";
 
